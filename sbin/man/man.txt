@@ -1,0 +1,44 @@
+NAME
+    man - display manual pages for shell commands
+
+SYNOPSIS
+    man <command>
+
+DESCRIPTION
+    man reads and displays the manual page for a given command
+    available in the shell. Each command provides its own manual
+    entry as a man.txt file located in its respective directory.
+
+    If no manual entry exists for the specified command, an error
+    message is displayed and the shell returns to the prompt.
+
+ARGUMENTS
+    <command>
+        The name of the command whose manual page is to be
+        displayed. Must correspond to an existing command
+        registered in the shell.
+
+EXAMPLES
+    man ls
+        Display the manual page for the ls command.
+
+    man man
+        Display this manual page.
+
+FILES
+    ../<command>/man.txt
+        The manual page file for each command, located in the
+        command's own directory relative to the shell root.
+
+ERRORS
+    man: no manual entry for <command>
+        No man.txt file was found for the specified command.
+        Either the command does not exist or it has no
+        manual page written for it yet.
+
+EXIT STATUS
+    0   Manual page found and displayed successfully.
+    1   No manual entry found, or invalid usage.
+
+SEE ALSO
+    help - list all available shell commands

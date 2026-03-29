@@ -12,7 +12,7 @@ if len(sargs) < 2:
 app_name = sargs[1]
 
 try:
-    with open(os.path.join(BASE_DIR, f"../{app_name}/man.txt")) as MAN_PAGE:
+    with open(os.path.join(BASE_DIR, "..", app_name, "man.txt")) as MAN_PAGE:
         data = MAN_PAGE.read()
     print(f"Manual page for {app_name}")
     print(data)

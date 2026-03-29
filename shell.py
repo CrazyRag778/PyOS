@@ -2,44 +2,46 @@ import json
 import os
 import subprocess
 
-SYSTEM_INFO = json.load(open("imp/system.json"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+SYSTEM_INFO = json.load(open(os.path.join(BASE_DIR, "imp", "system.json")))
 HOSTNAME = SYSTEM_INFO["HOSTNAME"]
 
 
-APP_REGISTER = json.load(open("sbin/register.json"))
+APP_REGISTER = json.load(open(os.path.join(BASE_DIR, "sbin", "register.json")))
 APP_REGISTER_LIST = list(APP_REGISTER.keys())
 
 PROMPT = f"system@{HOSTNAME}$ "
-PWD = "home/"
+PWD = "home"
 # DEBUG
 # print(PWD)
 # print(PROMPT)
 # print(APP_REGISTER_LIST)
 
-open("ENV/.system.json", "a")
+open(os.path.join(BASE_DIR, "ENV", ".system.json"), "a")
 
 
 # SYSTEM STARTUP
 def start_system():
-    with open("ENV/.system.json", "r") as f:
+    with open(os.path.join(BASE_DIR, "ENV", ".system.json"), "r") as f:
         shell = json.load(f)
     shell["turned_on"] = True
-    with open("ENV/.system.json", "w") as f:
+    with open(os.path.join(BASE_DIR, "ENV", ".system.json"), "w") as f:
         json.dump(shell, f, indent=4)
 
 
 def stop_system():
-    with open("ENV/.system.json", "r") as f:
+    with open(os.path.join(BASE_DIR, "ENV", ".system.json"), "r") as f:
         shell = json.load(f)
     shell["turned_on"] = False
-    with open("ENV/.system.json", "w") as f:
+    with open(os.path.join(BASE_DIR, "ENV", ".system.json"), "w") as f:
         json.dump(shell, f, indent=4)
     exit(0)
 
 
 # FILE MANAGEMENT
 def make_dir(name):
-    os.mkdir(f"{PWD}{name}")
+    os.mkdir(os.path.join(BASE_DIR, PWD, name))
 
 
 start_system()
@@ -54,7 +56,7 @@ while True:
     elif cmd[0] == "clear":
         subprocess.run("clear", shell=True)
     elif cmd[0] in APP_REGISTER_LIST:
-        cmd[0] = f"sbin/{cmd[0]}/" + cmd[0] + ".py"
+        cmd[0] = os.path.join(BASE_DIR, "sbin", cmd[0], cmd[0] + ".py")
         cmd = " ".join(["python3", *cmd])
         result = subprocess.run(cmd, shell=True)
     elif cmd[0] == "mkdir":

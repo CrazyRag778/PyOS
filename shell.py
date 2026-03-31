@@ -1,11 +1,11 @@
 """
-PyOS Shell: Main Interactive Command Dispatcher
-================================================
-shell.py is the entry point of PyOS. It implements a command-line shell that:
-1. Loads system configuration (hostname, env state) from JSON files
+PyBOX Image Shell: Main Interactive Command Dispatcher
+=====================================================
+shell.py is the entry point of PyBOX. It implements a command-line shell that:
+1. Loads image configuration (hostname, env state) from JSON files
 2. Maintains two app registries: sbin/ (system commands) and bin/ (user apps)
 3. Dispatches user input to registered apps or built-in commands
-4. Manages system state (startup, shutdown)
+4. Manages image state (startup, shutdown)
 
 Command Categories:
 - Built-in: killself, shutdown, clear, rebase, help, status, version
@@ -15,7 +15,7 @@ Command Categories:
 Architecture:
 - Registry-based dispatch: SYSTEM_APP_REGISTER_LIST and APP_REGISTER_LIST control available commands
 - Dynamic loading: Apps loaded from sbin/<name>/<name>.py or bin/<name>/<name>.py
-- State management: Tracks system status via ENV/.system.json
+- State management: Tracks image status via ENV/.system.json
 """
 
 import json
@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # System metadata and configuration
 SYSTEM_INFO = None
-HOSTNAME = "PyOS"
+HOSTNAME = "PyBOX"
 SYSTEM_APP_REGISTER = {}
 SYSTEM_APP_REGISTER_LIST = []
 APP_REGISTER = {}
@@ -36,11 +36,11 @@ APP_REGISTER_LIST = []
 
 def load_system_info():
     """
-    Load system configuration from imp/system.json.
-    Sets HOSTNAME and other system metadata.
+    Load image configuration from imp/system.json.
+    Sets HOSTNAME and other image metadata.
     
     Errors handled gracefully:
-    - Missing file: use default hostname "PyOS"
+    - Missing file: use default hostname "PyBOX"
     - Corrupt JSON: use defaults
     """
     global SYSTEM_INFO, HOSTNAME
@@ -52,16 +52,16 @@ def load_system_info():
             HOSTNAME = SYSTEM_INFO.get("HOSTNAME", "PyOS")
     except FileNotFoundError:
         print(f"WARNING: {system_json_path} not found, using defaults")
-        SYSTEM_INFO = {"HOSTNAME": "PyOS"}
-        HOSTNAME = "PyOS"
+        SYSTEM_INFO = {"HOSTNAME": "PyBOX"}
+        HOSTNAME = "PyBOX"
     except json.JSONDecodeError as e:
         print(f"WARNING: {system_json_path} corrupted ({e}), using defaults")
-        SYSTEM_INFO = {"HOSTNAME": "PyOS"}
-        HOSTNAME = "PyOS"
+        SYSTEM_INFO = {"HOSTNAME": "PyBOX"}
+        HOSTNAME = "PyBOX"
     except Exception as e:
         print(f"WARNING: Failed to load system info ({e}), using defaults")
-        SYSTEM_INFO = {"HOSTNAME": "PyOS"}
-        HOSTNAME = "PyOS"
+        SYSTEM_INFO = {"HOSTNAME": "PyBOX"}
+        HOSTNAME = "PyBOX"
 
 
 def REBASE_SYSTEM_BIN():
@@ -165,16 +165,16 @@ def print_status():
 
 
 def print_version():
-    """Display PyOS version info."""
-    print("PyOS v1.0 - Python-based Operating System")
-    print("A fantasy computer with app registry and shell interface")
+    """Display PyBOX version info."""
+    print("PyBOX v1.0 - Python-based customizable image")
+    print("A fantasy image environment for configurable workloads")
 
 
 def print_help():
     """Display built-in command help."""
-    print("PyOS Shell - Built-in Commands:")
+    print("PyBOX Shell - Built-in Commands:")
     print("  status                 Show system status")
-    print("  version                Show PyOS version")
+    print("  version                Show PyBOX version")
     print("  rebase [system/bin]    Reload app registries")
     print("  clear                  Clear screen")
     print("  help                   Show this help")

@@ -1,15 +1,15 @@
-# PyOS 🖥️
+# PyBOX 🖥️
 
-> A fantasy computer that simplifies packing of software and blobs — with the full feel of a complete OS.
+> A fantasy virtual image (like `.iso`) that simplifies packing software and blobs — with the feel of a complete configurable environment.
 
-PyOS is a Python-based operating system shell that simulates a real computer environment. It features a custom shell, app registry, user management, encrypted storage, a `neofetch`-style system info module, and a `man` page system — all built from pure Python.
+PyBOX is a Python-based virtual fantasy computer image that simulates a real computer environment. It features a custom shell, app registry, user management, encrypted storage, a `neofetch`-style system info module, and a `man` page system — all built from pure Python. This is the **VanillA Image known as CrazyRag778's Image**.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-PyOS/
+PyBOX/  # project root (repo folder remains by legacy name)
 ├── shell.py              # Main shell — entry point and command dispatcher
 ├── start.sh              # Shell script to launch PyOS
 ├── imp/
@@ -34,15 +34,15 @@ PyOS/
 
 ## 🚀 Getting Started
 
-### Launch PyOS
+### Launch PyBOX
 
 ```bash
 python3 shell.py
 ```
 
-You'll see the PyOS prompt:
+You'll see the PyBOX prompt:
 ```
-system@PyOS$
+system@PyBOX$
 ```
 
 ---
@@ -54,7 +54,7 @@ system@PyOS$
 #### System Information
 ```bash
 status                 # Show system status (hostname, registered apps)
-version                # Display PyOS version info
+version                # Display PyBOX version info
 help                   # Show all available commands
 ```
 
@@ -243,15 +243,15 @@ myapp John
 
 ### imp/system.json
 
-Contains system-level settings:
+Contains image-level settings:
 ```json
 {
-  "HOSTNAME": "PyOS",
+  "HOSTNAME": "PyBOX",
   "password": "root"
 }
 ```
 
-Edit this to customize your PyOS instance.
+Edit this to customize your PyBOX instance.
 
 ### ENV/.system.json
 
@@ -288,13 +288,13 @@ Runtime state (auto-managed):
 ### Example Session
 
 ```bash
-# Start PyOS
+# Start PyBOX
 python3 shell.py
 
 # Check status
 status
 # Output:
-# Hostname: PyOS
+# Hostname: PyBOX
 # System Apps: bob, man, passwd
 # User Apps: (none)
 

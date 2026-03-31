@@ -10,18 +10,23 @@ PyOS is a Python-based operating system shell that simulates a real computer env
 
 ```
 PyOS/
-├── shell.py              # Main shell — entry point of the OS
+├── shell.py              # Main shell — entry point and command dispatcher
 ├── start.sh              # Shell script to launch PyOS
 ├── imp/
 │   └── system.json       # System configuration (hostname, etc.)
 ├── ENV/
 │   └── .system.json      # Runtime environment state
 ├── sbin/
-│   ├── register.json     # App registry
+│   ├── register.json     # System app registry (bob, passwd, man, etc.)
+│   ├── bob/              # Package installer utility
+│   ├── passwd/           # Password manager
+│   ├── man/              # Manual page viewer
 │   └── <appname>/
 │       └── <appname>.py  # Each app lives in its own folder
-├── bin/                  # Binary utilities
+├── bin/                  # User-installed applications
+├── packs/                # Application packages (tarballs)
 ├── libs/                 # Shared libraries and reusable modules
+├── README.md             # This file
 └── .gitignore
 ```
 
@@ -29,84 +34,228 @@ PyOS/
 
 ## 🚀 Getting Started
 
-### Requirements
-
-- Python 3.8+
-- Linux (recommended) or any Unix-like system
-
-### Run
-
-```bash
-bash start.sh
-```
-
-Or directly:
+### Launch PyOS
 
 ```bash
 python3 shell.py
 ```
 
+You'll see the PyOS prompt:
+```
+system@PyOS$
+```
+
 ---
 
-## 🐚 Shell Usage
-
-Once PyOS starts, you get an interactive shell prompt:
-
-```
-[home] system@myhostname$
-```
+## 🎮 Shell Commands
 
 ### Built-in Commands
 
-| Command | Description |
-|---|---|
-| `shutdown` | Gracefully shuts down PyOS |
-| `killself` | Force-exits the shell |
-| `clear` | Clears the terminal screen |
-| `mkdir <name>` | Creates a directory |
-| `<appname> [args]` | Runs a registered app from `sbin/` |
-
-Any unrecognized command prints:
+#### System Information
+```bash
+status                 # Show system status (hostname, registered apps)
+version                # Display PyOS version info
+help                   # Show all available commands
 ```
-shell: command not found: <cmd>
+
+#### App Management
+```bash
+rebase                 # Reload app registries from register.json files
+rebase system/bin      # Reload system and user app registries
+```
+
+#### Session Control
+```bash
+clear                  # Clear screen
+killself               # Exit shell
+shutdown               # Gracefully shutdown system
+```
+
+### System Commands (sbin/)
+
+These are core commands registered in `sbin/register.json`:
+
+#### **bob** — Package Manager
+Installs and manages application packages.
+
+```bash
+bob install <package.tar.gz>    # Install package from packs/
+bob remove <package_name>       # Remove installed package
+bob list                        # List installed packages
+bob help                        # Show bob usage
+```
+
+**Mechanism:**
+- Extracts tarball from `packs/` to `bin/`
+- Reads `manifest.json` from package to get NAME and type
+- Registers app in `bin/register.json`
+- Updates app registries after changes
+
+Example:
+```bash
+bob install calculator.tar.gz
+bob list
+bob remove calculator
+```
+
+#### **passwd** — Password Manager
+Changes system password stored in `imp/system.json`.
+
+```bash
+passwd <new_password>    # Set new password (no args for default prompt)
+```
+
+Default password is `root`. After first login, subsequent changes require current password verification.
+
+#### **man** — Manual Page Viewer
+Display manual pages for commands and applications.
+
+```bash
+man <command>           # Display man page for command
+man bob                 # View bob package manager manual
+man passwd              # View passwd utility manual
+```
+
+Each app in `sbin/<app>/` and `bin/<app>/` should include a `man.txt` file.
+
+### User Commands (bin/)
+
+User-installed applications are stored in `bin/` and loaded dynamically from `bin/register.json`.
+
+Install applications using `bob`:
+```bash
+bob install myapp.tar.gz
+myapp arg1 arg2         # Run installed app with arguments
 ```
 
 ---
 
-## 📦 App System
+## 🏗️ Architecture
 
-Apps are registered in `sbin/register.json` and stored under `sbin/<appname>/<appname>.py`.
+### Command Dispatch Flow
 
-To add a new app:
+```
+User Input
+    ↓
+Parse command & arguments
+    ↓
+Match against:
+  1. Built-in commands (help, status, clear, etc.)
+  2. System apps (SYSTEM_APP_REGISTER_LIST from sbin/register.json)
+  3. User apps (APP_REGISTER_LIST from bin/register.json)
+    ↓
+Execute or dispatch
+    ↓
+Return output to shell
+```
 
-1. Create a folder: `sbin/myapp/`
-2. Add your script: `sbin/myapp/myapp.py`
-3. Register it in `sbin/register.json`:
+### App Registry System
 
+PyOS uses **two-tier app registry**:
+
+1. **System Apps** (`sbin/register.json`)
+   - Core system utilities
+   - Pre-installed with PyOS
+   - Example: bob, passwd, man
+
+2. **User Apps** (`bin/register.json`)
+   - Dynamically installed packages
+   - Managed by `bob` installer
+   - Hot-reloaded via `rebase` command
+
+Registry JSON format:
 ```json
 {
-  "myapp": {}
+  "app_name": {
+    "NAME": "app_name",
+    "type": "utility|tool|system"
+  }
 }
 ```
 
-Apps are then callable directly from the shell:
+### Error Handling
 
+The shell gracefully handles:
+- **Missing registry files** → Initialize empty registries
+- **Corrupted JSON** → Warn user and continue
+- **Missing app executables** → Display error message
+- **Subprocess failures** → Catch and report to user
+- **Invalid input** → Show command not found and suggest help
+- **EOF/Interrupt** → Handle Ctrl+D and Ctrl+C gracefully
+
+---
+
+## 📦 Creating Application Packages
+
+### Package Structure
+
+Create a tarball with this structure:
 ```
-[home] system@hostname$ myapp
+myapp.tar.gz
+└── myapp/
+    ├── myapp.py          # Main executable
+    ├── manifest.json     # Package metadata
+    ├── man.txt           # Manual page (optional)
+    └── <other files>
+```
+
+### manifest.json Example
+
+```json
+{
+  "NAME": "myapp",
+  "type": "utility",
+  "version": "1.0",
+  "description": "My awesome application"
+}
+```
+
+Required fields: `NAME` and `type`
+
+### myapp.py Example
+
+```python
+import sys
+
+if len(sys.argv) > 1:
+    name = sys.argv[1]
+    print(f"Hello, {name}!")
+else:
+    print("Hello, World!")
+```
+
+### Install Package
+
+```bash
+# Copy tarball to packs/ directory
+cp myapp.tar.gz packs/
+
+# Use bob to install
+bob install myapp.tar.gz
+
+# Run from shell
+myapp John
 ```
 
 ---
 
-## ⚙️ Configuration
+## 🔧 System Configuration
 
-**`imp/system.json`** — Static system config:
+### imp/system.json
+
+Contains system-level settings:
 ```json
 {
-  "HOSTNAME": "pyos-machine"
+  "HOSTNAME": "PyOS",
+  "password": "root"
 }
 ```
 
-**`ENV/.system.json`** — Runtime state (auto-managed):
+Edit this to customize your PyOS instance.
+
+### ENV/.system.json
+
+Runtime state (auto-managed):
 ```json
 {
   "turned_on": true
@@ -115,39 +264,154 @@ Apps are then callable directly from the shell:
 
 ---
 
-## 🔐 Security
+## 🛠️ Development
 
-PyOS includes **Fernet-based encryption** as a reusable module in `libs/` for securing sensitive data such as user passwords. The `passwd.py` utility handles user management with encrypted credentials.
+### Adding New System Commands
+
+1. Create directory: `sbin/<mycommand>/`
+2. Add `<mycommand>/<mycommand>.py`
+3. Add entry to `sbin/register.json`:
+   ```json
+   {
+     "mycommand": {
+       "NAME": "mycommand",
+       "type": "system"
+     }
+   }
+   ```
+4. Invoke `rebase` in shell to reload registries
 
 ---
 
-## 🧩 Features
+## 📝 Examples
 
-- **Custom Shell** — Interactive prompt with hostname display and working directory
-- **App Registry** — Plug-and-play app system via `sbin/` and `register.json`
-- **User Management** — `passwd`-style user creation and authentication
-- **Fernet Encryption** — Encrypted storage for sensitive system data
-- **`neofetch`-style Module** — System info display (OS, hostname, kernel, etc.)
-- **`man` Page System** — Built-in manual pages for PyOS commands
-- **Absolute Path Resolution** — All paths resolved relative to `shell.py` via `os.path.dirname(os.path.abspath(__file__))`
+### Example Session
+
+```bash
+# Start PyOS
+python3 shell.py
+
+# Check status
+status
+# Output:
+# Hostname: PyOS
+# System Apps: bob, man, passwd
+# User Apps: (none)
+
+# Install a package
+bob install myapp.tar.gz
+
+# Verify installation
+bob list
+
+# Run the app
+myapp argument1
+
+# Check available commands
+help
+
+# Exit
+shutdown
+```
+
+### Example: Creating and Installing a Package
+
+```bash
+# Create package structure
+mkdir -p myapp_pkg/myapp
+cd myapp_pkg/myapp
+
+# Create app code
+cat > myapp.py << 'EOF'
+import sys
+print("MyApp v1.0")
+print(f"Args: {sys.argv[1:]}")
+EOF
+
+# Create manifest
+cat > manifest.json << 'EOF'
+{
+  "NAME": "myapp",
+  "type": "utility",
+  "version": "1.0"
+}
+EOF
+
+# Create manual page
+cat > man.txt << 'EOF'
+myapp: Example application
+
+USAGE
+  myapp [args]
+
+DESCRIPTION
+  This is an example application.
+EOF
+
+# Create tarball
+cd ..
+tar czf myapp.tar.gz myapp/
+cp myapp.tar.gz /path/to/PyOS/packs/
+
+# Install in PyOS
+# (in PyOS shell)
+bob install myapp.tar.gz
+myapp test
+```
 
 ---
 
-## 🛠️ Development Conventions
+## 🐛 Troubleshooting
 
-- All subprocess calls use list mode with `cwd=BASE_DIR`
-- JSON read and write use **separate `with` blocks**
-- Shared utilities live in `libs/` for reuse across apps
-- Comments are present in all source files
+### Command Not Found
+
+Check if the app is registered:
+```bash
+help          # Show all available commands
+status        # Check system/user apps
+bob list      # For installed apps
+```
+
+If app is installed but not showing:
+```bash
+rebase        # Reload registries
+```
+
+### Registry Errors
+
+Check JSON files manually:
+```bash
+# Outside PyOS
+cat sbin/register.json    # Should be valid JSON
+cat bin/register.json
+```
+
+### Missing Dependencies
+
+PyOS requires only Python 3.6+. All functionality is built with Python standard library:
+- `json` — Configuration and registry
+- `os` — File system operations
+- `subprocess` — App execution
+- `tarfile` — Package extraction
+- `shutil` — Directory operations
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+See [LICENSE](LICENSE) file.
 
 ---
 
-## 👤 Author
+## 🤝 Contributing
 
-**CrazyRag778** — [github.com/CrazyRag778](https://github.com/CrazyRag778)
+This is a fantasy OS project. Feel free to fork and extend with new features!
+
+Suggestions for enhancements:
+- File editor (`ed` or `vim`-style)
+- User management system
+- Process/job management
+- Network simulation
+- File permissions system
+- Pipe support (|) for chaining commands
+

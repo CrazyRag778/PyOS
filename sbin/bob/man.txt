@@ -1,0 +1,43 @@
+bob: package installer utility for PyOS
+
+SYNOPSIS
+    bob.py install <package.tar.gz>
+    bob.py remove <package>
+    bob.py list
+    bob.py help
+    bob.py <package.tar.gz>  # legacy install form
+
+DESCRIPTION
+    bob is a package management helper used by the PyOS shell to install and remove applications
+    from the local package repository under `packs/` and `bin/`.
+
+    In `shell.py`, commands are dispatched through the application register files (`sbin/register.json`
+    and `bin/register.json`). The `bob` tool updates `bin/register.json` each time a package is installed
+    or removed.
+
+COMMANDS
+    install
+        Extracts archive from `packs/<package.tar.gz>` into `bin/<package-name>`.
+        Reads `manifest.json` in extracted package and registers app by manifest NAME and type.
+
+    remove
+        Removes installed package by registered NAME. Deletes the corresponding directory under `bin/`
+        and removes the entry from `bin/register.json`.
+
+    list
+        Prints installed applications from `bin/register.json`.
+
+    help
+        Shows this usage information.
+
+ERROR HANDLING
+    - Missing or invalid tarball argument prints an error and exits nonzero.
+    - `register.json` load errors are handled gracefully with fallback to empty registry.
+    - Corrupt or missing `manifest.json` causes failures during install.
+    - Attempting to remove a package not in the registry raises an error.
+
+LEGACY SHELL USAGE
+    shell.py routes inserted commands by membership in register lists. `bob` is typically invoked by passing
+    literal command name from `system@host$` prompt as a registered sbin app (if registered). The old behavior
+    supports calling `bob.py <package.tar.gz>` directly for install with no subcommand.
+

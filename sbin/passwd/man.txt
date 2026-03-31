@@ -1,54 +1,46 @@
-PASSWD(1)                        User Commands                        PASSWD(1)
-
-NAME
-       passwd - change user password
+passwd: system password manager for PyOS
 
 SYNOPSIS
-       passwd <new_password>
+    passwd <new_password>
 
 DESCRIPTION
-       Changes the system password stored in the system configuration file.
+    passwd is a system utility used within the PyOS shell to change the system password.
+    The current password is stored in `imp/system.json` and verified before allowing changes.
 
-       If the current password is the default ("root"), the password is
-       changed without any verification.
+    When invoked from the shell, passwd is dispatched as a registered sbin command through
+    the command dispatcher in `shell.py` based on membership in `sbin/register.json`.
 
-       If the current password has already been set by the user, passwd
-       will prompt for the current password before allowing the change.
+USAGE
+    passwd <new_password>
+        Changes the system password to <new_password>.
 
-ARGUMENTS
-       new_password
-              The new password to set. Must be provided as a command line
-              argument.
+        If the current password is the default ("root"), the new password is set immediately
+        without verification.
 
-PROMPTS
-       Current password:
-              Shown when the current password is not the default. The user
-              must enter the correct current password to proceed.
-
-EXIT STATUS
-       0      Password changed successfully.
-
-       1      Incorrect current password was entered.
-
-       1      No new password argument was provided.
+        If a custom password has already been set, you will be prompted for the current
+        password before the change is allowed.
 
 EXAMPLES
-       Change password while default is set:
-              passwd mynewpassword
+    First-time password change (default "root" active):
+        system@host$ passwd mysecurepassword
 
-       Change password after default has been changed:
-              passwd mynewpassword
-              Current password: ********
+    Password change after custom password is set:
+        system@host$ passwd mynewpassword
+        Current password: (enter current password, then new password is set)
+
+ERROR HANDLING
+    - If no new password is provided, an error is printed.
+    - If current password verification fails, the change is rejected.
+    - If system.json cannot be read or written, operation fails with error.
 
 FILES
-       ../../imp/system.json
-              System configuration file where the password is stored.
+    imp/system.json
+        System configuration file containing the encrypted or stored password.
 
 NOTES
-       The default password is "root". It is strongly recommended to change
-       the password on first use.
+    - The default password is "root" for initial system setup.
+    - It is strongly recommended to change the password on first shell startup.
+    - Password changes are persisted immediately to imp/system.json.
 
 SEE ALSO
-       login(1), su(1)
-
-                                                                      PASSWD(1)
+    shell.py (command dispatcher)

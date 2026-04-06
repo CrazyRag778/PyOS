@@ -17,4 +17,9 @@ try:
     print(f"Manual page for {app_name}")
     print(data)
 except FileNotFoundError:
+    with open(os.path.join(BASE_DIR, "..", "..", "bin", app_name, "man.txt")) as MAN_PAGE:
+        data = MAN_PAGE.read()
+    print(f"Manual page for {app_name}")
+    print(data)  
+else:
     print(f"man: no manual entry for {app_name}")
